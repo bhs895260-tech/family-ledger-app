@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>가족 가계부 설치</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: #f0f4f3; color: #1a2b28; line-height: 1.6;
+    padding: 24px 20px 60px; max-width: 480px; margin: 0 auto; }
+  .hero { text-align: center; padding: 20px 0 28px; }
+  .hero .icon { font-size: 64px; }
+  h1 { font-size: 26px; margin-top: 8px; }
+  .sub { color: #5a6b66; margin-top: 6px; font-size: 15px; }
+  .btn { display: block; background: #0f766e; color: #fff; text-align: center;
+    text-decoration: none; font-size: 19px; font-weight: 700; padding: 18px;
+    border-radius: 14px; margin: 8px 0 6px; box-shadow: 0 4px 14px rgba(15,118,110,.3); }
+  .btn:active { transform: translateY(1px); }
+  .btnnote { text-align: center; color: #5a6b66; font-size: 13px; margin-bottom: 28px; }
+  .card { background: #fff; border-radius: 14px; padding: 18px 20px; margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .card h2 { font-size: 17px; margin-bottom: 10px; }
+  .card ol { padding-left: 20px; }
+  .card li { margin-bottom: 7px; font-size: 15px; }
+  .tag { display: inline-block; background: #fef3e2; color: #b45309;
+    font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  .step { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; }
+  .step .n { flex: none; width: 26px; height: 26px; border-radius: 50%;
+    background: #0f766e; color: #fff; font-weight: 700; font-size: 14px;
+    display: grid; place-items: center; }
+  .warn { background: #fff7ed; border: 1px solid #fed7aa; }
+  .emo { font-size: 18px; }
+</style>
+</head>
+<body>
+  <div class="hero">
+    <div class="icon">💳</div>
+    <h1>가족 가계부</h1>
+    <div class="sub">결제 알림을 자동으로 잡아<br>가족이 함께 쓰는 가계부</div>
+  </div>
+
+  <a class="btn" href="https://github.com/bhs895260-tech/family-ledger-app/releases/download/v1.3.0/family-ledger.apk">
+    📥 앱 설치하기 (안드로이드)
+  </a>
+  <div class="btnnote">버튼을 누르면 설치 파일이 내려받아져요 · 약 50MB</div>
+
+  <div class="card">
+    <h2>📱 설치 순서</h2>
+    <div class="step"><div class="n">1</div><div>위 <b>초록 버튼</b>을 눌러 파일을 받으세요.</div></div>
+    <div class="step"><div class="n">2</div><div>내려받은 <b>family-ledger.apk</b>를 탭 → <b>설치</b>.</div></div>
+    <div class="step"><div class="n">3</div><div>설치 후 앱을 열고, <b>알림 접근 권한</b>과 <b>알림 보내기</b>를 허용해주세요.</div></div>
+    <div class="step"><div class="n">4</div><div>처음 뜨는 <b>분류 설정</b>에서 자주 쓰는 3개를 별표(⭐)로 골라주세요.</div></div>
+  </div>
+
+  <div class="card warn">
+    <h2>⚠️ "차단됨" 이 뜨면</h2>
+    <p style="font-size:14px; color:#7c5a2e; margin-bottom:10px;">
+      구글·삼성이 스토어 밖 앱을 막는 정상적인 경고예요. 잠깐 꺼주면 됩니다.</p>
+    <ol>
+      <li><span class="tag">구글</span> Play 스토어 → 프로필 → <b>Play 프로텍트</b> → ⚙️ → <b>검사 끄기</b></li>
+      <li><span class="tag">삼성</span> 설정 → 보안 및 개인정보 → <b>자동 차단 끄기</b></li>
+      <li>설치가 끝나면 둘 다 <b>다시 켜두세요.</b></li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>👨‍👩‍👧 가족과 함께 쓰려면</h2>
+    <ol>
+      <li>한 사람이 앱에서 <b>👥 → 가족 만들기</b> → <b>8자리 코드</b>가 나와요.</li>
+      <li>그 코드를 가족에게 알려주고, 가족도 이 페이지에서 앱을 설치해요.</li>
+      <li>가족 폰에서 <b>👥 → 코드로 참여하기</b> → 같은 가계부가 공유돼요.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2><span class="emo">🍏</span> 아이폰은요?</h2>
+    <p style="font-size:14px; color:#5a6b66;">
+      아이폰은 애플 정책상 알림 자동 감지가 불가능해요. 안드로이드 폰에서 설치해주세요.
+      (가족 중 아이폰 사용자는 조회용 웹 주소로 볼 수 있게 나중에 추가 가능)</p>
+  </div>
+</body>
+</html>
