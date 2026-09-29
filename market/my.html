@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 매물</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/market.css">
+</head>
+<body>
+  <div id="nav"></div>
+  <h1>내 매물</h1>
+  <p class="sub">채널 변경은 기존 판매채널을 <b>종료한 뒤에만</b> 가능합니다. 한 매물이 양쪽에 동시에 존재할 수 없습니다.</p>
+  <div id="list"></div>
+
+<script type="module">
+  import { mountNav, toast, $, listingCard, esc } from './js/ui.js';
+  import { CHANNEL, CHANNEL_LABEL, STATUS, canChangeChannel, matchBuyersForListing } from './js/domain.js';
+  import { allListings, allBuyers, closeListingById, changeListingChannel } from './js/store.js';
+
+  mountNav('my.html');
+
+  function actions(l) {
+    const other = l.channel === CHANNEL.DIRECT ? CHANNEL.CONSULTING : CHANNEL.DIRECT;
+    const chk = canChangeChannel(l, other);
+    const status = l.status === STATUS.CLOSED
+      ? '<span class="badge closed">판매 종료</span>'
+      : '<span class="badge score">판매 중</span>';
+    let matchInfo = '';
+    if (l.channel === CHANNEL.DIRECT && l.status === STATUS.ACTIVE) {
+      const n = matchBuyersForListing(l, allBuyers()).length;
+      matchInfo = `<span class="hint">조건 맞는 직거래 매수자 ${n}명</span>`;
+    }
+    return `
+      <div class="row between" style="margin-top:10px">${status}${matchInfo}</div>
+      <div class="btnrow">
+        ${l.status === STATUS.ACTIVE
+          ? `<button class="btn small danger" data-act="close" data-id="${esc(l.id)}">판매 종료</button>`
+          : ''}
+        <button class="btn small secondary" data-act="move" data-id="${esc(l.id)}" data-to="${other}"
+          ${chk.ok ? '' : `disabled title="${esc(chk.reason)}"`}>${CHANNEL_LABEL[other]}로 변경</button>
+      </div>
+      ${chk.ok ? '' : `<p class="hint" style="margin-top:6px">${esc(chk.reason)}</p>`}`;
+  }
+
+  function render() {
+    const rows = allListings();
+    $('#list').innerHTML = rows.length
+      ? rows.map((l) => listingCard(l, actions(l))).join('')
+      : '<div class="card empty">등록된 매물이 없습니다. <a href="sell.html">매도 등록</a>에서 시작하세요.</div>';
+  }
+  $('#list').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-act]');
+    if (!b) return;
+    try {
+      if (b.dataset.act === 'close') {
+        if (!confirm('이 매물의 판매를 종료할까요? 종료 후에만 채널을 변경할 수 있습니다.')) return;
+        closeListingById(b.dataset.id);
+        toast('판매를 종료했습니다');
+      } else if (b.dataset.act === 'move') {
+        changeListingChannel(b.dataset.id, b.dataset.to);
+        toast(`${CHANNEL_LABEL[b.dataset.to]} 채널로 변경했습니다`);
+      }
+      render();
+    } catch (e) { toast(e.message, 'err'); }
+  });
+  render();
+</script>
+</body>
+</html>
