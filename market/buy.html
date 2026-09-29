@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매수 조건 등록</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/market.css">
+</head>
+<body>
+  <div id="nav"></div>
+  <h1>매수 조건 등록</h1>
+  <p class="sub">찾아다니지 마세요. 조건만 등록하면 맞는 직거래 매물이 올라올 때 알려드립니다. 금액은 <b>만원</b> 단위입니다.</p>
+
+  <form id="f" autocomplete="off">
+    <div class="card">
+      <div class="grid2">
+        <label class="f"><span>지역 (시/도)</span><select name="sido" id="sido" required></select></label>
+        <label class="f"><span>시/군/구 (선택)</span><input type="text" name="sigungu" placeholder="예: 해운대"></label>
+        <label class="f"><span>업종</span><select name="category" id="category"></select></label>
+        <label class="f"><span>운영 방식</span><select name="operation" id="operation"></select></label>
+        <label class="f"><span>총투자금 (상한)</span><div class="unit" data-unit="만원"><input type="number" name="budgetMax" min="1" placeholder="예: 5000" required></div></label>
+        <label class="f"><span>월세 상한 (선택)</span><div class="unit" data-unit="만원"><input type="number" name="rentMax" min="0" placeholder="예: 150"></div></label>
+        <label class="f"><span>희망 월수익 (선택)</span><div class="unit" data-unit="만원"><input type="number" name="targetProfit" min="0" placeholder="예: 300"></div></label>
+        <label class="f"><span>이름 (선택)</span><input type="text" name="name" placeholder="홍길동"></label>
+      </div>
+      <label class="f"><span>연락처</span><input type="tel" name="contact" placeholder="010-0000-0000" required></label>
+      <button class="btn block" type="submit">조건 등록하고 매물 확인</button>
+      <p class="hint" style="margin-top:8px">등록한 조건은 직거래 매수자 풀에만 저장됩니다. 컨설팅 매물과는 매칭되지 않습니다.</p>
+    </div>
+  </form>
+
+  <div id="matches" hidden>
+    <h2 id="matchTitle"></h2>
+    <div id="list"></div>
+  </div>
+
+<script type="module">
+  import { mountNav, toast, $, fillRegion, fillCategory, fillOperation, formData, listingCard, esc } from './js/ui.js';
+  import { matchListingsForBuyer, OPERATION } from './js/domain.js';
+  import { addBuyer, allListings } from './js/store.js';
+
+  mountNav('buy.html');
+  fillRegion($('#sido')); fillCategory($('#category'), '업종 무관'); fillOperation($('#operation'), [OPERATION.ANY, OPERATION.OWNER, OPERATION.AUTO]);
+
+  $('#f').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    try {
+      const buyer = addBuyer(formData(ev.target));
+      const res = matchListingsForBuyer(buyer, allListings());
+      $('#matches').hidden = false;
+      $('#matchTitle').textContent = res.length
+        ? `지금 조건에 맞는 직거래 매물 ${res.length}건`
+        : '아직 맞는 매물이 없습니다. 새 매물이 등록되면 알려드립니다.';
+      $('#list').innerHTML = res.map((r) => listingCard(r.listing,
+        `<div class="row" style="margin-top:8px"><span class="badge score">매칭 ${r.score}점</span><span class="match-hits">${esc(r.hits.join(' · '))}</span></div>
+         <div class="btnrow"><a class="btn small" href="tel:${esc(r.listing.contact)}">점주에게 직접 연락</a></div>`)).join('');
+      toast('조건이 등록되었습니다');
+      $('#matches').scrollIntoView({ behavior: 'smooth' });
+    } catch (e) {
+      toast(e.message, 'err');
+    }
+  });
+</script>
+</body>
+</html>

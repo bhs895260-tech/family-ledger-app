@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>컨설팅 CRM</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/market.css">
+</head>
+<body>
+  <div id="nav"></div>
+  <h1>컨설팅 CRM <span class="badge consulting">담당자 전용</span></h1>
+  <p class="sub">비공개 컨설팅 매물과 비공개 매수자 풀만 표시됩니다. 직거래 매물·직거래 매수자는 이 화면에 나타나지 않습니다.</p>
+
+  <div class="card">
+    <div class="row between"><h2>비공개 매물</h2><label class="hint"><input type="checkbox" id="showClosed"> 종료 포함</label></div>
+    <div class="count" id="count"></div>
+    <div id="list"></div>
+  </div>
+
+  <div class="card">
+    <h2>비공개 매수자 풀</h2>
+    <div id="buyers"></div>
+    <details style="margin-top:10px">
+      <summary class="hint" style="cursor:pointer">비공개 매수자 등록 (담당자 입력)</summary>
+      <form id="bf" autocomplete="off" style="margin-top:10px">
+        <div class="grid2">
+          <label class="f"><span>이름</span><input type="text" name="name"></label>
+          <label class="f"><span>연락처</span><input type="tel" name="contact" required></label>
+          <label class="f"><span>지역</span><select name="sido" id="bsido" required></select></label>
+          <label class="f"><span>업종</span><select name="category" id="bcategory"></select></label>
+          <label class="f"><span>총투자금 상한</span><div class="unit" data-unit="만원"><input type="number" name="budgetMax" min="1" required></div></label>
+          <label class="f"><span>희망 월수익</span><div class="unit" data-unit="만원"><input type="number" name="targetProfit" min="0"></div></label>
+        </div>
+        <input type="hidden" name="pool" value="CONSULTING">
+        <button class="btn small navy" type="submit">비공개 풀에 등록</button>
+      </form>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>데이터 무결성</h2>
+    <p class="hint" id="integrity"></p>
+  </div>
+
+<script type="module">
+  import { mountNav, toast, $, fillRegion, fillCategory, formData, listingCard, esc } from './js/ui.js';
+  import { consultingListings, consultingBuyers, directListings, assertChannelInvariant, STATUS, formatManwon, OPERATION_LABEL } from './js/domain.js';
+  import { allListings, allBuyers, closeListingById, addBuyer } from './js/store.js';
+
+  mountNav('crm.html');
+  fillRegion($('#bsido')); fillCategory($('#bcategory'), '업종 무관');
+
+  function render() {
+    const all = allListings();
+    const rows = consultingListings(all, { includeClosed: $('#showClosed').checked });
+    $('#count').textContent = `${rows.length}건`;
+    $('#list').innerHTML = rows.length
+      ? rows.map((l) => listingCard(l, `
+          <div class="row between" style="margin-top:8px">
+            ${l.status === STATUS.CLOSED ? '<span class="badge closed">종료</span>' : '<span class="badge score">진행 중</span>'}
+            <span class="hint">담당자 연락: ${esc(l.contact)}</span>
+          </div>
+          <div class="hint" style="margin-top:4px">비공개 사유: ${esc(consultReasons(l))}</div>
+          ${l.status === STATUS.ACTIVE ? `<div class="btnrow"><button class="btn small danger" data-close="${esc(l.id)}">거래 종료</button></div>` : ''}`)).join('')
+      : '<div class="empty">컨설팅 매물이 없습니다.</div>';
+
+    const bs = consultingBuyers(allBuyers());
+    $('#buyers').innerHTML = bs.length
+      ? `<table><thead><tr><th>이름</th><th>지역</th><th>업종</th><th>총투자금</th><th>희망수익</th><th>운영</th></tr></thead><tbody>${
+          bs.map((b) => `<tr><td>${esc(b.name || '-')}<br><span class="hint">${esc(b.contact)}</span></td><td>${esc(b.sido)} ${esc(b.sigungu)}</td><td>${esc(b.category || '무관')}</td><td>${formatManwon(b.budgetMax)}</td><td>${b.targetProfit ? formatManwon(b.targetProfit) : '-'}</td><td>${esc(OPERATION_LABEL[b.operation])}</td></tr>`).join('')
+        }</tbody></table>`
+      : '<div class="empty">비공개 매수자가 없습니다.</div>';
+
+    try {
+      assertChannelInvariant(all);
+      $('#integrity').textContent = `정상. 전체 ${all.length}건 중 직거래 ${directListings(all).length}건은 이 화면에서 제외되었습니다. 매물당 채널 1개 규칙 위반 0건.`;
+    } catch (e) {
+      $('#integrity').textContent = `위반: ${e.message}`;
+    }
+  }
+  function consultReasons(l) {
+    const f = l.flags || {};
+    const r = [];
+    if (f.wantsPrivate) r.push('비공개 요청');
+    if (f.staffExposureRisk) r.push('직원·고객 노출 곤란');
+    if (f.complexContract) r.push('계약구조 복잡');
+    if (f.competitorRisk) r.push('경쟁점 노출 위험');
+    if (f.highTicketInvestor) r.push('고액 투자자 대상');
+    if (!f.publicOk) r.push('공개 불가');
+    if (!f.ownerHandlesInquiry) r.push('직접 응대 불가');
+    if (!f.saleKnownOk) r.push('매각 사실 비공개');
+    return r.length ? r.join(', ') : '고매출·고가 기준 초과 또는 매도자 선택';
+  }
+  $('#showClosed').onchange = render;
+  $('#list').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-close]');
+    if (!b) return;
+    if (!confirm('이 컨설팅 거래를 종료할까요?')) return;
+    try { closeListingById(b.dataset.close); toast('종료했습니다'); render(); } catch (e) { toast(e.message, 'err'); }
+  });
+  $('#bf').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    try { addBuyer(formData(ev.target)); ev.target.reset(); toast('비공개 매수자 풀에 등록했습니다'); render(); }
+    catch (e) { toast(e.message, 'err'); }
+  });
+  render();
+</script>
+</body>
+</html>

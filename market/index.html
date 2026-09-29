@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>점포 직거래 · 컨설팅</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/market.css">
+</head>
+<body>
+  <div id="nav"></div>
+  <div class="hero">
+    <div class="icon">🏪</div>
+    <h1>점포 양도 · 양수</h1>
+    <p class="sub">공개 직거래와 비공개 컨설팅, 두 시장은 섞이지 않습니다.</p>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <h2><span class="badge direct">공개 직거래</span></h2>
+      <ul>
+        <li>공개 노출 가능한 소형·저가 매물</li>
+        <li>점주가 직접 문의 응대</li>
+        <li>저~중매출, 낮은 권리금</li>
+        <li>등록·검색·연락 모두 무료</li>
+      </ul>
+      <div class="btnrow">
+        <a class="btn small" href="direct.html">매물 보기</a>
+        <a class="btn small secondary" href="buy.html">조건 등록</a>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="badge consulting">비공개 컨설팅</span></h2>
+      <ul>
+        <li>비공개 요청, 고매출·고가 매물</li>
+        <li>직원·고객·경쟁점 노출 방지</li>
+        <li>본사·명의변경·계약구조 조정</li>
+        <li>담당자 개입, 별도 매수자 풀</li>
+      </ul>
+      <div class="btnrow">
+        <a class="btn small navy" href="sell.html">매물 상담 신청</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule">
+    <b>시스템 규칙</b>
+    <ul>
+      <li>매물 하나는 <code>DIRECT</code> 또는 <code>CONSULTING</code> 둘 중 하나의 채널만 가집니다.</li>
+      <li>직거래 매물은 컨설팅 CRM에 표시되지 않습니다.</li>
+      <li>컨설팅 매물은 직거래 사이트에 노출되지 않습니다.</li>
+      <li>채널 변경은 기존 판매채널을 종료한 뒤에만 가능합니다.</li>
+      <li>기준(월매출·권리금·총 양도가·비공개 조건) 이상이면 직거래 등록 자체가 막힙니다.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>매도자라면</h2>
+    <p class="sub" style="margin-bottom:10px">등록 화면에서 조건을 입력하면 직거래 가능 여부가 자동으로 분류됩니다.</p>
+    <a class="btn block" href="sell.html">매도 등록하기</a>
+  </div>
+
+  <div class="card">
+    <h2>데모 데이터</h2>
+    <p class="hint" id="stats">불러오는 중…</p>
+    <div class="btnrow">
+      <button class="btn small secondary" id="seed">샘플 데이터 넣기</button>
+      <button class="btn small ghost" id="clear">전체 초기화</button>
+    </div>
+  </div>
+
+<script type="module">
+  import { mountNav, toast, $ } from './js/ui.js';
+  import { allListings, allBuyers, seedDemo, clearAll } from './js/store.js';
+  import { directListings, consultingListings, directBuyers, consultingBuyers } from './js/domain.js';
+  mountNav('index.html');
+  function render() {
+    const L = allListings(), B = allBuyers();
+    $('#stats').textContent =
+      `직거래 매물 ${directListings(L).length}건 · 컨설팅 매물 ${consultingListings(L).length}건 · ` +
+      `직거래 매수자 ${directBuyers(B).length}명 · 비공개 매수자 ${consultingBuyers(B).length}명 (이 브라우저에만 저장)`;
+  }
+  $('#seed').onclick = () => { const r = seedDemo(); toast(`매물 ${r.listings}건, 매수자 ${r.buyers}명 추가`); render(); };
+  $('#clear').onclick = () => { if (confirm('이 브라우저의 매물·매수자 데이터를 모두 지울까요?')) { clearAll(); toast('초기화했습니다'); render(); } };
+  render();
+</script>
+</body>
+</html>

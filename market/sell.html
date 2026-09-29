@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매도 등록</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/market.css">
+</head>
+<body>
+  <div id="nav"></div>
+  <h1>매도 등록</h1>
+  <p class="sub">입력한 조건에 따라 공개 직거래 / 비공개 컨설팅으로 자동 분류됩니다. 금액은 <b>만원</b> 단위입니다.</p>
+
+  <form id="f" autocomplete="off">
+    <div class="card">
+      <h2>기본 정보</h2>
+      <label class="f"><span>상호</span><input type="text" name="name" placeholder="예: 해운대 김밥집" required></label>
+      <div class="grid2">
+        <label class="f"><span>지역 (시/도)</span><select name="sido" id="sido" required></select></label>
+        <label class="f"><span>시/군/구</span><input type="text" name="sigungu" placeholder="예: 해운대구"></label>
+        <label class="f"><span>업종</span><select name="category" id="category" required></select></label>
+        <label class="f"><span>운영 방식</span><select name="operation" id="operation"></select></label>
+      </div>
+      <label class="f"><span>연락처</span><input type="tel" name="contact" placeholder="010-0000-0000" required></label>
+    </div>
+
+    <div class="card">
+      <h2>매출 · 금액</h2>
+      <div class="grid2">
+        <label class="f"><span>월매출</span><div class="unit" data-unit="만원"><input type="number" name="monthlySales" min="0" placeholder="0"></div></label>
+        <label class="f"><span>월순이익</span><div class="unit" data-unit="만원"><input type="number" name="monthlyProfit" min="0" placeholder="0"></div></label>
+        <label class="f"><span>보증금</span><div class="unit" data-unit="만원"><input type="number" name="deposit" min="0" placeholder="0"></div></label>
+        <label class="f"><span>권리금</span><div class="unit" data-unit="만원"><input type="number" name="premium" min="0" placeholder="0"></div></label>
+        <label class="f"><span>기타 (시설·재고 등)</span><div class="unit" data-unit="만원"><input type="number" name="extra" min="0" placeholder="0"></div></label>
+        <label class="f"><span>월세</span><div class="unit" data-unit="만원"><input type="number" name="rent" min="0" placeholder="0"></div></label>
+      </div>
+      <p class="hint">총 양도가(보증금 + 권리금 + 기타): <b id="total">0만원</b></p>
+      <label class="f" style="margin-top:10px"><span>매물 소개</span><textarea name="description" placeholder="운영 형태, 인수 조건 등"></textarea></label>
+    </div>
+
+    <div class="card">
+      <h2>공개 · 응대 조건</h2>
+      <label class="chk"><input type="checkbox" name="publicOk" checked><div>매물 정보를 <b>공개 노출</b>해도 됩니다<small>상호·지역·금액이 직거래 페이지에 공개됩니다</small></div></label>
+      <label class="chk"><input type="checkbox" name="ownerHandlesInquiry" checked><div>매수 문의를 <b>점주가 직접 응대</b>할 수 있습니다</div></label>
+      <label class="chk"><input type="checkbox" name="saleKnownOk" checked><div>매각 사실이 주변에 알려져도 문제 없습니다</div></label>
+    </div>
+
+    <div class="card warn">
+      <h2>해당하면 체크하세요 (비공개 컨설팅 대상)</h2>
+      <label class="chk"><input type="checkbox" name="wantsPrivate"><div>비공개로 진행하고 싶습니다</div></label>
+      <label class="chk"><input type="checkbox" name="staffExposureRisk"><div>직원·고객에게 매각 사실이 알려지면 곤란합니다</div></label>
+      <label class="chk"><input type="checkbox" name="complexContract"><div>본사 승인·명의변경·계약구조가 복잡합니다</div></label>
+      <label class="chk"><input type="checkbox" name="competitorRisk"><div>경쟁점에 노출될 위험이 큽니다</div></label>
+      <label class="chk"><input type="checkbox" name="highTicketInvestor"><div>고액 투자자를 대상으로 합니다</div></label>
+    </div>
+
+    <div class="card" id="result">
+      <h2>판매 방식 선택</h2>
+      <div id="blocked" hidden>
+        <div class="block-msg">이 매물은 비공개 컨설팅 검토 대상입니다</div>
+        <ul class="reasons" id="reasons"></ul>
+        <p class="hint" style="margin-top:8px">직거래 등록은 열리지 않습니다. 담당자가 비공개로 검토합니다.</p>
+      </div>
+      <div id="open" hidden>
+        <p class="hint">두 방식 모두 가능합니다. 한 매물은 한 채널에만 등록됩니다.</p>
+      </div>
+      <div class="btnrow">
+        <button type="button" class="btn" id="btnDirect">공개 직거래로 판매</button>
+        <button type="button" class="btn navy" id="btnConsulting">비공개 컨설팅으로 판매</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="card info" id="done" hidden>
+    <h2>등록 완료</h2>
+    <p id="doneMsg"></p>
+    <div class="btnrow">
+      <a class="btn small" id="doneLink" href="my.html">내 매물 보기</a>
+      <button type="button" class="btn small ghost" id="again">하나 더 등록</button>
+    </div>
+  </div>
+
+<script type="module">
+  import { mountNav, toast, $, $$, fillRegion, fillCategory, fillOperation, formData } from './js/ui.js';
+  import { classifyListing, normalizeListingInput, CHANNEL, CHANNEL_LABEL, OPERATION, formatManwon, matchBuyersForListing } from './js/domain.js';
+  import { addListing, allBuyers } from './js/store.js';
+
+  mountNav('sell.html');
+  fillRegion($('#sido')); fillCategory($('#category')); fillOperation($('#operation'), [OPERATION.OWNER, OPERATION.AUTO]);
+  const form = $('#f');
+
+  function collect() {
+    const d = formData(form);
+    return {
+      ...d,
+      flags: {
+        publicOk: d.publicOk, ownerHandlesInquiry: d.ownerHandlesInquiry, saleKnownOk: d.saleKnownOk,
+        wantsPrivate: d.wantsPrivate, staffExposureRisk: d.staffExposureRisk, complexContract: d.complexContract,
+        competitorRisk: d.competitorRisk, highTicketInvestor: d.highTicketInvestor,
+      },
+    };
+  }
+
+  function refresh() {
+    const input = collect();
+    const n = normalizeListingInput(input);
+    $('#total').textContent = formatManwon(n.totalPrice);
+    const cls = classifyListing(input);
+    $('#blocked').hidden = !cls.directBlocked;
+    $('#open').hidden = cls.directBlocked;
+    $('#reasons').innerHTML = cls.reasons.map((r) => `<li>${r}</li>`).join('');
+    $('#btnDirect').disabled = cls.directBlocked;
+    $('#btnDirect').title = cls.directBlocked ? cls.message : '';
+  }
+  form.addEventListener('input', refresh);
+  form.addEventListener('change', refresh);
+  refresh();
+
+  function submit(channel) {
+    if (!form.reportValidity()) return;
+    try {
+      const listing = addListing(collect(), channel);
+      let extra = '';
+      if (channel === CHANNEL.DIRECT) {
+        const n = matchBuyersForListing(listing, allBuyers()).length;
+        extra = n ? ` 현재 조건이 맞는 직거래 매수자 ${n}명이 있습니다.` : ' 아직 조건이 맞는 매수자는 없습니다. 새 매수자가 등록되면 자동 매칭됩니다.';
+      } else {
+        extra = ' 담당자가 비공개로 검토한 뒤 연락드립니다. 이 매물은 직거래 사이트에 노출되지 않습니다.';
+      }
+      $('#doneMsg').textContent = `"${listing.name}" 매물이 ${CHANNEL_LABEL[channel]} 채널로 등록되었습니다.${extra}`;
+      $('#done').hidden = false;
+      form.hidden = true;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast('등록되었습니다');
+    } catch (e) {
+      toast(e.message, 'err');
+    }
+  }
+  $('#btnDirect').onclick = () => submit(CHANNEL.DIRECT);
+  $('#btnConsulting').onclick = () => submit(CHANNEL.CONSULTING);
+  $('#again').onclick = () => { form.reset(); form.hidden = false; $('#done').hidden = true; refresh(); };
+</script>
+</body>
+</html>
